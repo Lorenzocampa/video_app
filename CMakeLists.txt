@@ -1,12 +1,25 @@
 cmake_minimum_required(VERSION 3.14)
+
+set(CMAKE_BUILD_TYPE "Debug")
+
 project(video-app C CXX)
-set(CMAKE_CXX_STANDARD 14)
+
+set(CMAKE_CXX_DEBUG_FLAGS "${CMAKE_CXX_DEBUG_FLAGS} -g -glldb")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+message("CMAKE_CXX_DEBUG_FLAGS: ${CMAKE_CXX_DEBUG_FLAGS}")
 
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/FFmpeg)
-
+add_subdirectory(lib/utils)
 add_definitions(-DGL_SILENCE_DEPRECATION)
 
+
+list(APPEND SOURCES
+	src/main.cpp
+	src/video_reader.cpp
+	src/video_reader.hpp
+)
 if(APPLE)
 list(APPEND EXTRA_LIBS
 "-framework OpenGL"
@@ -32,10 +45,7 @@ configure_file(
     )
 	endif()
 
-	list(APPEND SOURCES
-		src/main.cpp
-		src/load_frame.cpp
-	)
-add_executable(video-app src/main.cpp src/load_frame.cpp)
-target_link_libraries(video-app FFmpeg glfw ${EXTRA_LIBS})
+add_executable(video-app ${SOURCES})
+target_link_libraries(video-app FFmpeg glfw ${EXTRA_LIBS} avutil utils GLEW)
+
 

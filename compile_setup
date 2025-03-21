@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Add debug flag to be able to debug using lldb
+cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_STANDARD=14

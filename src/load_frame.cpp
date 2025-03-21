@@ -1,13 +1,13 @@
-extern "C"
-{
-#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
-}
+#include <inttypes.h>
 #include <fstream>
+
 
 bool load_frame(const char* filename, int* width_out, int* height_out, unsigned char** data_out)
 {
+
 	std::ifstream file(filename);
 	if (file.is_open())
 	{
@@ -22,7 +22,7 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
 
 	//*open the file using libavformat
 	AVFormatContext* av_format_ctx = avformat_alloc_context();
-	if (!av_format_ctx)
+	if (av_format_ctx == nullptr)
 	{
 		fprintf(stderr, "could not allocate AVFormatContext\n");
 		return false;
@@ -64,18 +64,18 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
 	}
 
 	//*set up a codec context for the decoder
-	AVCodecContext* av_code_ctx = avcodec_alloc_context3(av_codec);
-	if (!av_code_ctx)
+	AVCodecContext* av_codec_ctx = avcodec_alloc_context3(av_codec);
+	if (!av_codec_ctx)
 	{
 		printf("couldn't allocate AVCodecContext\n");
 		return false;
 	}
-	if (avcodec_parameters_to_context(av_code_ctx, av_codec_params) < 0)
+	if (avcodec_parameters_to_context(av_codec_ctx, av_codec_params) < 0)
 	{
 		printf("couldn't initialize AVCodecContext\n");
 		return false;
 	}
-	if (!avcodec_open2(av_code_ctx, av_codec, NULL) < 0)
+	if (!avcodec_open2(av_codec_ctx, av_codec, NULL) < 0)
 	{
 		printf("couldn't open codec\n");
 		return false;
@@ -100,13 +100,13 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
 		{
 			continue;
 		}
-		response = avcodec_send_packet(av_code_ctx, av_packet);
+		response = avcodec_send_packet(av_codec_ctx, av_packet);
 		if (response < 0)
 		{
 			printf("failed to decode packet: %s\n", av_err2str(response));
 			return false;
 		}
-		response = avcodec_receive_frame(av_code_ctx, av_frame);
+		response = avcodec_receive_frame(av_codec_ctx, av_frame);
 		if (response == AVERROR(EAGAIN) || response == AVERROR_EOF)
 		{
 			continue;
@@ -121,7 +121,7 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
 	}
 
 	uint8_t* data			   = new uint8_t[av_frame->width * av_frame->height * 4];
-	SwsContext* sws_scaler_ctx = sws_getContext(av_frame->width, av_frame->height, av_code_ctx->pix_fmt, av_frame->width, av_frame->height, AV_PIX_FMT_RGB0, SWS_BILINEAR, NULL, NULL, NULL);
+	SwsContext* sws_scaler_ctx = sws_getContext(av_frame->width, av_frame->height, av_codec_ctx->pix_fmt, av_frame->width, av_frame->height, AV_PIX_FMT_RGB0, SWS_BILINEAR, NULL, NULL, NULL);
 
 	if (!sws_scaler_ctx)
 	{
@@ -129,20 +129,20 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
 		return false;
 	}
 
-	uint8_t* dest[4]		 = {data, NULL, NULL, NULL};
+	uint8_t* dest[4]	 = {data, NULL, NULL, NULL};
 	int dest_linesize[4] = {av_frame->width * 4, 0, 0, 0};
 	sws_scale(sws_scaler_ctx, av_frame->data, av_frame->linesize, 0, av_frame->height, dest, dest_linesize);
 	sws_freeContext(sws_scaler_ctx);
 
-	*width_out  = av_frame->width;
+	*width_out	= av_frame->width;
 	*height_out = av_frame->height;
-	*data_out   = data;
+	*data_out	= data;
 
 	avformat_close_input(&av_format_ctx);
 	avformat_free_context(av_format_ctx);
 	av_frame_free(&av_frame);
 	av_packet_free(&av_packet);
-	avcodec_free_context(&av_code_ctx);
+	avcodec_free_context(&av_codec_ctx);
 
 	return true;
 }
