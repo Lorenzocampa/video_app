@@ -130,7 +130,7 @@ int main()
 	}
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-	GLFWwindow* window = glfwCreateWindow(1920, 1080, "OpenGL Window", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "OpenGL Window", NULL, NULL);
 	if (window == nullptr)
 	{
 		std::cerr << "GLFW window creation failed!" << std::endl;
@@ -146,7 +146,7 @@ int main()
 	glUseProgram(shader_program);
 
 	//* load video data
-	std::vector<std::string> filenames = {"/mnt/c/Users/astor_dev_03/Desktop/output.mp4"};
+	std::vector<std::string> filenames = {"/mnt/c/Users/astor_dev_03/Desktop/video1.mp4"};
 	std::vector<VideoReaderState> vr_state(filenames.size());
 	for (size_t i = 0; i < filenames.size(); ++i)
 	{
@@ -209,7 +209,7 @@ int main()
 		frame_count++;
 		auto current_time					  = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = current_time - last_time;
-		if (elapsed.count() >= 0.01) // u
+		if (elapsed.count() >= 0.1) // u
 		{
 			double fps = frame_count / elapsed.count();
 			std::cout << "FPS: " << fps << std::endl;
